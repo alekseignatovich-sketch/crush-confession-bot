@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict
 
 from aiogram import Bot, Dispatcher, Router, F
@@ -23,10 +23,9 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN не найден в .env или переменных окружения")
 
-ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))          # id группы/канала/твоего user_id
+ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))
 MODERATION_ENABLED = os.getenv("MODERATION_ENABLED", "false").lower() == "true"
 
-# Антиспам: один confess каждые N секунд
 ANTISPAM_SECONDS = 60
 
 logging.basicConfig(level=logging.INFO)
@@ -36,8 +35,8 @@ dp = Dispatcher(storage=storage)
 router = Router()
 dp.include_router(router)
 
-# Хранилище времени последнего confess (user_id → datetime)
 last_confess_time: Dict[int, datetime] = {}
+UTC = timezone.utc
 
 class ConfessionForm(StatesGroup):
     waiting_for_recipient = State()
@@ -60,7 +59,7 @@ async def cmd_start(message: Message):
 
 @router.message(Command("confess", "признание"))
 async def cmd_confess(message: Message, state: FSMContext):
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     last_time = last_confess_time.get(message.from_user.id)
     if last_time and (now - last_time) < timedelta(seconds=ANTISPAM_SECONDS):
         remaining = int((timedelta(seconds=ANTISPAM_SECONDS) - (now - last_time)).total_seconds())
@@ -80,15 +79,18 @@ async def cmd_confess(message: Message, state: FSMContext):
 async def process_recipient(message: Message, state: FSMContext):
     target_id: Optional[int] = None
     target_username: Optional[str] = None
+    is_bot = False
 
     if message.forward_from:
         target_id = message.forward_from.id
         target_username = message.forward_from.username
+        is_bot = message.forward_from.is_bot or False
     elif message.text and message.text.startswith("@"):
         try:
             chat = await bot.get_chat(message.text.strip())
             target_id = chat.id
             target_username = chat.username
+            is_bot = getattr(chat, 'is_bot', False) or chat.type == "bot"
         except Exception as e:
             logging.error(f"Не удалось найти чат по @{message.text}: {e}")
             await message.answer("Не нашёл такого пользователя 😔\nПопробуй переслать его сообщение.")
@@ -101,6 +103,10 @@ async def process_recipient(message: Message, state: FSMContext):
         await message.answer("Нельзя отправить признание самому себе 😏")
         return
 
+    if is_bot:
+        await message.answer("Нельзя отправлять признания ботам — они не умеют влюбляться 😂\nВыбери реального человека!")
+        return
+
     if target_id is None:
         await message.answer("Не удалось определить получателя. Попробуй ещё раз.")
         return
@@ -108,7 +114,7 @@ async def process_recipient(message: Message, state: FSMContext):
     await state.update_data(
         target_id=target_id,
         target_username=target_username,
-        contents=[]  # список сообщений/медиа
+        contents=[]
     )
 
     await state.set_state(ConfessionForm.waiting_for_message)
@@ -141,13 +147,12 @@ async def collect_content(message: Message, state: FSMContext):
     contents.append(item)
     await state.update_data(contents=contents)
 
-    # Кнопки подтверждения после каждого сообщения
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Отправить 💌", callback_data="send_confession")],
         [InlineKeyboardButton(text="Отменить",     callback_data="cancel")]
     ])
 
-    await message.answer("Добавлено! Ещё что-то добавить или уже отправить?", reply_markup=kb)
+    await message.answer("Добавлено! Ещё что-то или отправляем?", reply_markup=kb)
 
 
 @router.callback_query(F.data == "send_confession")
@@ -174,11 +179,23 @@ async def send_confession(callback: CallbackQuery, state: FSMContext):
                 await bot.send_sticker(target_id, sticker=item["file_id"])
 
         await callback.message.answer("Признание успешно и анонимно отправлено! 🔥")
-        last_confess_time[callback.from_user.id] = datetime.utcnow()
+        last_confess_time[callback.from_user.id] = datetime.now(UTC)
 
     except Exception as e:
+        error_str = str(e).lower()
         logging.error(f"Ошибка доставки: {e}")
-        await callback.message.answer("Не получилось доставить 😢 Возможно, получатель закрыл чат с ботами.")
+
+        if "can't initiate conversation" in error_str or "forbidden: bot can't" in error_str:
+            await callback.message.answer(
+                "Не могу доставить 😢\n\n"
+                "Получатель должен сначала открыть бота (написать мне /start).\n"
+                "Telegram не разрешает ботам писать первым незнакомым людям.\n"
+                "Попроси человека запустить бота — и тогда признание дойдёт!"
+            )
+        elif "send messages to bots" in error_str:
+            await callback.message.answer("Это бот, а не человек — признания ботам не отправляются 😅")
+        else:
+            await callback.message.answer("Что-то пошло не так при доставке… Попробуй позже или /confess заново.")
 
     await state.clear()
 
@@ -192,8 +209,7 @@ async def cancel_action(event: Message | CallbackQuery, state: FSMContext):
     else:
         msg = event
 
-    current_state = await state.get_state()
-    if current_state is None:
+    if await state.get_state() is None:
         await msg.answer("Нечего отменять 😊")
         return
 
