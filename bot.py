@@ -2,6 +2,8 @@ import asyncio
 import logging
 import os
 import random
+import signal
+import sys
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict
 
@@ -139,12 +141,12 @@ VALENTINE_TEMPLATES = {
             "You're my favorite notification spam",
             "If you were Wi-Fi, I'd only connect to you",
             "You're the plot twist I didn't see coming",
-            "I’m not lazy, I’m just waiting for you to text first",
-            "You’re so hot my phone is overheating",
+            "I'm not lazy, I'm just waiting for you to text first",
+            "You're so hot my phone is overheating",
             "You're my favorite glitch in the matrix",
             "If you were a vegetable, you'd be a cute-cumber 😏",
             "You're the reason I have trust issues with my own heart",
-            "I’m not staring at your pics... okay, maybe a little"
+            "I'm not staring at your pics... okay, maybe a little"
         ],
         "cute": [
             "You're my favorite emoji in real life 💕",
@@ -183,48 +185,27 @@ VALENTINE_TEMPLATES = {
     }
 }
 
-# ────────────────── FILE_ID АНИМИРОВАННЫХ СТИКЕРОВ ──────────────────
-VALENTINE_STICKERS = {
-    "cute": [
-        "AAMCAQADGQEAARqOiml-8BkY-A7dEp40DcT05ywrR08rAALJBwAC43gEAAGESQ6JsVOaWwEAB20AAzgE",  # первый старый
-        "AAMCAgADGQEAARqOkGl-8rxoWplnK7rktVHALUxxWKPKAAJwBQACP5XMCu8O5gHvPyV7AQAHbQADOAQ",  # новый 1
-        "AAMCAgADGQEAARqOlGl-8vIHqKa6DPLGL0Lmga3VD61eAAIXAwACVp29CueGLsTGVMUbAQAHbQADOAQ",  # новый 2
-        "AAMCAgADGQEAARqOlml-8wmrULE5165D12HBFazQTl9JAAICAAPANk8TCPVuRfqEp1kBAAdtAAM4BA",  # новый 3
-        "AAMCAgADGQEAARqOmml-8yGZxq-LkQLglFki10SlQ3bPAAL6AAP3AsgPcgN0rrC8YjIBAAdtAAM4BA",  # новый 4
-        "AAMCAgADGQEAARqOnGl-8zV-TsdF79XpZ-DTbwIROdH2AAJ6AQACIjeOBHzRRJH2EY24AQAHbQADOAQ",  # новый 5
-        "AAMCAgADGQEAARqOoGl-80H7pFHzbfv_DSvVfqKmoR0cAAIFAwACVp29CuuXLDaLUDqGAQAHbQADOAQ",  # новый 6
-        "AAMCAgADGQEAARqOpGl-80v__AJba1UOUC1zVcncTAeNAAJsAANZu_wlsMc-Gxss4P0BAAdtAAM4BA",  # новый 7
-        "AAMCAgADGQEAARqOpml-82FmScSlV4_53VR5jHUfclO1AAIMAAPANk8T4s8j_8J3n7wBAAdtAAM4BA",  # новый 8
-        "AAMCAgADGQEAARqOrGl-86nSziYVOh0KJuYUyqm9u22aAAIZAAPANk8T0EOA9iBXFEsBAAdtAAM4BA",  # новый 9
-        "AAMCAgADGQEAARqOsGl-8-kF5KnbETG7_C-bssguwi83AAIKAAPANk8T_w2uPugO_QgBAAdtAAM4BA",  # новый 10
-        "AAMCAgADGQEAARqOtGl-8_ullzjXIX8eaKRxnNA1po7IAAKJAgACVp29CqFWzQIhMg49AQAHbQADOAQ",  # новый 11
-        "AAMCAgADGQEAARqOtml-9AwQPCKHegKW-4COFbV09e6qAAJaEgAC7j_hSzYTwY1_lfrkAQAHbQADOAQ",  # новый 12
-        "AAMCAgADGQEAARqOuGl-9BxhvGQXdlyUlqfgAw0W1Qy5AAIKHQACwaggSQiNN_5i8NF4AQAHbQADOAQ",  # новый 13
-        "AAMCAgADGQEAARqOuml-9FoKUQzKP4MRYuveH9xwVNDPAAKrEQACyvBQSEm753QxB38OAQAHbQADOAQ",  # новый 14
-        "AAMCBAADGQEAARqOvGl-9G260QSes9WEUvNv7H05k_RyAALuEQACpvFxHptzNHbM9taGAQAHbQADOAQ",  # новый 15
-        "AAMCAgADGQEAARqOwGl-9IUp2N9kU2M49okk29uJ9Nj1AAIFLQACjgeRSOK9yHW-aXzWAQAHbQADOAQ",  # новый 16
-        "AAMCAgADGQEAARqOwml-9JWHx6XENXsxMK85sChog2_-AAKUAAM7YCQU39nXtW9mKSwBAAdtAAM4BA",  # новый 17
-    ],
-    "funny": [
-        "AAMCAgADGQEAARqOpml-82FmScSlV4_53VR5jHUfclO1AAIMAAPANk8T4s8j_8J3n7wBAAdtAAM4BA",  # пример, добавь свои
-        "AAMCAgADGQEAARqOuGl-9BxhvGQXdlyUlqfgAw0W1Qy5AAIKHQACwaggSQiNN_5i8NF4AQAHbQADOAQ",  # пример
-        # добавь ещё из твоих
-    ],
-    "romantic": [
-        "AAMCAgADGQEAARqOlGl-8vIHqKa6DPLGL0Lmga3VD61eAAIXAwACVp29CueGLsTGVMUbAQAHbQADOAQ",  # пример
-        "AAMCAgADGQEAARqOpGl-80v__AJba1UOUC1zVcncTAeNAAJsAANZu_wlsMc-Gxss4P0BAAdtAAM4BA",  # пример
-        # добавь ещё
-    ],
-    "neon": [
-        "AAMCAgADGQEAARqOnGl-8zV-TsdF79XpZ-DTbwIROdH2AAJ6AQACIjeOBHzRRJH2EY24AQAHbQADOAQ",  # пример
-        "AAMCAgADGQEAARqOoGl-80H7pFHzbfv_DSvVfqKmoR0cAAIFAwACVp29CuuXLDaLUDqGAQAHbQADOAQ",  # пример
-        # добавь ещё
-    ],
-    "default": [
-        "AAMCAQADGQEAARqOiml-8BkY-A7dEp40DcT05ywrR08rAALJBwAC43gEAAGESQ6JsVOaWwEAB20AAzgE",  # микс
-        # добавь ещё
-    ]
-}
+# ────────────────── ВСЕ СТИКЕРЫ В ОДНУ КАТЕГОРИЮ ──────────────────
+ALL_VALENTINE_STICKERS = [
+    "AAMCAQADGQEAARqOiml-8BkY-A7dEp40DcT05ywrR08rAALJBwAC43gEAAGESQ6JsVOaWwEAB20AAzgE",
+    "AAMCAgADGQEAARqOkGl-8rxoWplnK7rktVHALUxxWKPKAAJwBQACP5XMCu8O5gHvPyV7AQAHbQADOAQ",
+    "AAMCAgADGQEAARqOlGl-8vIHqKa6DPLGL0Lmga3VD61eAAIXAwACVp29CueGLsTGVMUbAQAHbQADOAQ",
+    "AAMCAgADGQEAARqOlml-8wmrULE5165D12HBFazQTl9JAAICAAPANk8TCPVuRfqEp1kBAAdtAAM4BA",
+    "AAMCAgADGQEAARqOmml-8yGZxq-LkQLglFki10SlQ3bPAAL6AAP3AsgPcgN0rrC8YjIBAAdtAAM4BA",
+    "AAMCAgADGQEAARqOnGl-8zV-TsdF79XpZ-DTbwIROdH2AAJ6AQACIjeOBHzRRJH2EY24AQAHbQADOAQ",
+    "AAMCAgADGQEAARqOoGl-80H7pFHzbfv_DSvVfqKmoR0cAAIFAwACVp29CuuXLDaLUDqGAQAHbQADOAQ",
+    "AAMCAgADGQEAARqOpGl-80v__AJba1UOUC1zVcncTAeNAAJsAANZu_wlsMc-Gxss4P0BAAdtAAM4BA",
+    "AAMCAgADGQEAARqOpml-82FmScSlV4_53VR5jHUfclO1AAIMAAPANk8T4s8j_8J3n7wBAAdtAAM4BA",
+    "AAMCAgADGQEAARqOrGl-86nSziYVOh0KJuYUyqm9u22aAAIZAAPANk8T0EOA9iBXFEsBAAdtAAM4BA",
+    "AAMCAgADGQEAARqOsGl-8-kF5KnbETG7_C-bssguwi83AAIKAAPANk8T_w2uPugO_QgBAAdtAAM4BA",
+    "AAMCAgADGQEAARqOtGl-8_ullzjXIX8eaKRxnNA1po7IAAKJAgACVp29CqFWzQIhMg49AQAHbQADOAQ",
+    "AAMCAgADGQEAARqOtml-9AwQPCKHegKW-4COFbV09e6qAAJaEgAC7j_hSzYTwY1_lfrkAQAHbQADOAQ",
+    "AAMCAgADGQEAARqOuGl-9BxhvGQXdlyUlqfgAw0W1Qy5AAIKHQACwaggSQiNN_5i8NF4AQAHbQADOAQ",
+    "AAMCAgADGQEAARqOuml-9FoKUQzKP4MRYuveH9xwVNDPAAKrEQACyvBQSEm753QxB38OAQAHbQADOAQ",
+    "AAMCBAADGQEAARqOvGl-9G260QSes9WEUvNv7H05k_RyAALuEQACpvFxHptzNHbM9taGAQAHbQADOAQ",
+    "AAMCAgADGQEAARqOwGl-9IUp2N9kU2M49okk29uJ9Nj1AAIFLQACjgeRSOK9yHW-aXzWAQAHbQADOAQ",
+    "AAMCAgADGQEAARqOwml-9JWHx6XENXsxMK85sChog2_-AAKUAAM7YCQU39nXtW9mKSwBAAdtAAM4BA",
+]
 
 STICKER_CAPTIONS = [
     "Анонимное признание в анимации 💌",
@@ -244,8 +225,7 @@ class ConfessionForm(StatesGroup):
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton("Открытка 💌", callback_data="gen_pic")],
-        [InlineKeyboardButton("Текстовая валентинка", callback_data="gen_text")],
+        [InlineKeyboardButton("Открытка 💌", callback_data="gen_text")],
         [InlineKeyboardButton("Анимированный стикер", callback_data="gen_sticker")],
         [InlineKeyboardButton("Отправить признание", callback_data="start_confess")]
     ])
@@ -255,12 +235,75 @@ async def cmd_start(message: Message):
         "<b>Команды:</b>\n"
         "• /confess — отправить анонимное признание\n"
         "• /valentine или /gen — сгенерировать валентинку (можно funny, cute, romantic, flirty + en)\n"
-        "• /valentinessticker или /sticker — анимированный стикер\n"
+        "• /sticker — анимированный стикер\n"
         "• /cancel — отменить текущее действие\n\n"
         "Просто пришли текст / фото / голосовое / стикер — я спрошу, кому отправить.\n"
         "Получатель увидит только меня — 100% анонимно."
     , reply_markup=kb)
 
+
+# ─── CALLBACK ХЭНДЛЕРЫ ДЛЯ КНОПОК МЕНЮ ───
+
+@router.callback_query(F.data == "gen_text")
+async def callback_gen_text(callback: CallbackQuery):
+    await callback.answer()
+    # Генерируем случайную валентинку (русская, романтичная по умолчанию)
+    templates = VALENTINE_TEMPLATES["ru"]["romantic"]
+    selected = random.choice(templates)
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton("🔄 Другую", callback_data="gen_text")],
+        [InlineKeyboardButton("💌 Отправить признание", callback_data="start_confess")]
+    ])
+    await callback.message.answer(
+        f"Вот твоя валентинка:\n\n"
+        f"<blockquote expandable>{selected}</blockquote>",
+        reply_markup=kb
+    )
+
+
+@router.callback_query(F.data == "gen_sticker")
+async def callback_gen_sticker(callback: CallbackQuery):
+    await callback.answer()
+    sticker_id = random.choice(ALL_VALENTINE_STICKERS)
+    caption = random.choice(STICKER_CAPTIONS)
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton("🔄 Другой стикер", callback_data="gen_sticker")],
+        [InlineKeyboardButton("💌 Отправить признание", callback_data="start_confess")]
+    ])
+    await callback.message.answer_sticker(sticker=sticker_id)
+    await callback.message.answer(f"<i>{caption}</i>", reply_markup=kb)
+
+
+@router.callback_query(F.data == "start_confess")
+async def callback_start_confess(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    now = datetime.now(UTC)
+    last_time = last_confess_time.get(callback.from_user.id)
+    if last_time and (now - last_time) < timedelta(seconds=ANTISPAM_SECONDS):
+        remaining = int((timedelta(seconds=ANTISPAM_SECONDS) - (now - last_time)).total_seconds())
+        await callback.message.answer(f"Подожди ещё {remaining} сек перед следующим признанием 😉")
+        return
+
+    await state.set_state(ConfessionForm.waiting_for_recipient)
+    await callback.message.answer(
+        "Кому отправить признание? 💕\n\n"
+        "• Напиши @username\n"
+        "• Или перешли любое сообщение от этого человека\n\n"
+        "Отменить → /cancel"
+    )
+
+
+# ─── КОМАНДА ДЛЯ СТИКЕРОВ ───
+
+@router.message(Command("sticker", "valentinessticker"))
+async def cmd_sticker(message: Message):
+    sticker_id = random.choice(ALL_VALENTINE_STICKERS)
+    caption = random.choice(STICKER_CAPTIONS)
+    await message.answer_sticker(sticker=sticker_id)
+    await message.answer(f"<i>{caption}</i>")
+
+
+# ─── ОСНОВНОЙ ФУНКЦИОНАЛ ПРИЗНАНИЙ ───
 
 @router.message(Command("confess", "признание"))
 async def cmd_confess(message: Message, state: FSMContext):
@@ -391,12 +434,13 @@ async def send_confession(callback: CallbackQuery, state: FSMContext):
         logging.error(f"Ошибка доставки: {e}")
 
         if "can't initiate conversation" in error_str or "forbidden: bot can't" in error_str:
+            bot_username = (await bot.get_me()).username
             await callback.message.answer(
                 "Не могу доставить 😢\n\n"
                 "Получатель ещё не общался со мной — Telegram не даёт ботам писать первыми.\n\n"
                 "Попроси его открыть бота и написать /start — "
                 f"как только он это сделает, признание улетит! 💌\n\n"
-                f"Ссылка: https://t.me/{(await bot.get_me()).username}"
+                f"Ссылка: https://t.me/{bot_username}"
             )
         elif "send messages to bots" in error_str:
             await callback.message.answer("Это бот, а не человек — признания ботам не отправляются 😅")
@@ -416,7 +460,7 @@ async def cancel_action(event: Message | CallbackQuery, state: FSMContext):
         msg = event
 
     if await state.get_state() is None:
-        await msg.answer("Нечego отменять 😊")
+        await msg.answer("Нечего отменять 😊")
         return
 
     await state.clear()
@@ -452,21 +496,78 @@ async def generate_valentine(message: Message):
     templates = VALENTINE_TEMPLATES[lang][category]
     selected = random.choice(templates)
 
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton("🔄 Другую", callback_data=f"gen_val_{lang}_{category}")],
+    ])
+
     await message.answer(
         f"Вот твоя валентинка ({category}, {lang.upper()}):\n\n"
-        f"<blockquote expandable>{selected}</blockquote>\n\n"
-        "Хочешь другую? /valentine [категория] [en]"
+        f"<blockquote expandable>{selected}</blockquote>",
+        reply_markup=kb
     )
+
+
+# ─── ДОПОЛНИТЕЛЬНЫЙ ХЭНДЛЕР ДЛЯ КНОПКИ "ДРУГУЮ ВАЛЕНТИНКУ" ───
+@router.callback_query(F.data.startswith("gen_val_"))
+async def regenerate_valentine(callback: CallbackQuery):
+    await callback.answer()
+    parts = callback.data.split("_")
+    if len(parts) >= 4:
+        lang = parts[2]
+        category = parts[3]
+        if lang in VALENTINE_TEMPLATES and category in VALENTINE_TEMPLATES[lang]:
+            templates = VALENTINE_TEMPLATES[lang][category]
+            selected = random.choice(templates)
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton("🔄 Другую", callback_data=f"gen_val_{lang}_{category}")],
+            ])
+            await callback.message.edit_text(
+                f"Вот твоя валентинка ({category}, {lang.upper()}):\n\n"
+                f"<blockquote expandable>{selected}</blockquote>",
+                reply_markup=kb
+            )
+            return
+    await callback.message.answer("Ошибка генерации. Попробуй /valentine")
 
 
 # ────────────────── ЗАПУСК ──────────────────
 
+async def on_shutdown():
+    logging.info("Остановка бота...")
+    await dp.stop_polling()
+    await bot.session.close()
+
+
+def setup_signal_handlers():
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown_handler(s)))
+
+
+async def shutdown_handler(sig):
+    logging.info(f"Получен сигнал {sig.name}")
+    await on_shutdown()
+    sys.exit(0)
+
+
 async def main():
+    # Проверка валидности токена
+    try:
+        me = await bot.get_me()
+        logging.info(f"✅ Бот запущен: @{me.username} (id={me.id})")
+    except Exception as e:
+        logging.critical(f"❌ Неверный BOT_TOKEN! Ошибка: {e}")
+        logging.critical("Проверьте токен в .env или переменных окружения")
+        return
+
+    setup_signal_handlers()
+
     await dp.start_polling(
         bot,
-        allowed_updates=dp.resolve_used_update_types(),
+        allowed_updates=["message", "callback_query"],
         drop_pending_updates=True
     )
+
 
 if __name__ == "__main__":
     asyncio.run(main())
