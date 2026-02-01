@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 import random
-import sys
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict
 
@@ -24,9 +23,6 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN не найден в .env или переменных окружения")
-
-ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))
-MODERATION_ENABLED = os.getenv("MODERATION_ENABLED", "false").lower() == "true"
 
 ANTISPAM_SECONDS = 60
 
@@ -65,34 +61,12 @@ VALENTINE_TEMPLATES = {
             "Ты выглядишь так, будто создана, чтобы меня мучить",
             "Хочу узнать, какой у тебя вкус... поцелуя",
         ]
-    },
-    "en": {
-        "romantic": [
-            "You're the reason my heart beats a little faster every day. Happy Valentine's 💕",
-            "Every moment with you feels like the best part of my story. Love you ❤️",
-            "You make ordinary days feel magical. Happy Valentine's Day!",
-        ],
-        "funny": [
-            "Roses are red, violets are blue, I anonymously like you... shh 😏",
-            "Sending this anonymously because if you reject me, I can pretend it wasn't me 😂",
-            "You're the reason I smile at my phone like an idiot",
-        ],
-        "cute": [
-            "You're my favorite emoji in real life 💕",
-            "I want to hug you so tight even this bot is blushing",
-            "You're my little ray of sunshine on cloudy days",
-        ],
-        "flirty": [
-            "If looks could undress, you'd be naked by now 😏",
-            "You're designed to torture me in the best way",
-            "I want to know how your lips taste...",
-        ]
     }
 }
 
-# ────────────────── ВАЛИДНЫЕ СТИКЕРЫ (только проверенные) ──────────────────
-ALL_VALENTINE_STICKERS = [
-"CAACAgIAAxkBAAFBmvppfwLgJhUWM52e3-hkWqsCrN9zPwACegEAAiI3jgR80USR9hGNuDgE",
+# ────────────────── ВАЛИДНЫЕ СТИКЕРЫ (только правильные file_id) ──────────────────
+VALENTINE_STICKERS = [
+    "CAACAgIAAxkBAAFBmvppfwLgJhUWM52e3-hkWqsCrN9zPwACegEAAiI3jgR80USR9hGNuDgE",
     "CAACAgQAAxkBAAFBmwtpfwP3-t_2oIAJ504J4vIfUd9bOwACJhMAAqwWsVMdVmmblZlr2TgE",
     "CAACAgIAAxkBAAFBmw1pfwQcGerw3hvAK4wy6O6mprff7wACiQIAAladvQqhVs0CITIOPTgE",
     "CAACAgIAAxkBAAFBmw9pfwQuSx9FdGM6HCZg1DF7U-iU4QACDAADwDZPE-LPI__Cd5-8OAQ",
@@ -100,7 +74,7 @@ ALL_VALENTINE_STICKERS = [
     "CAACAgEAAxkBAAFBmxNpfwRMBIvttmmut0v7BQaAdKWosQACyQcAAuN4BAABhEkOibFTmls4BA",
     "CAACAgIAAxkBAAFBmxdpfwRh3h4OShF5gv4ZQrSEC5wBAQACcAUAAj-VzArvDuYB7z8lezgE",
     "CAACAgIAAxkBAAFBmxlpfwRueMDiN-98v-PHpgml_rBo_AACYAUAAj-VzApGyHYEZMxRFTgE",
-    "CAACAgIAAxkBAAFBmxtpfwSC0Oo1A-zmqCskNzsWzmUmrQACGQMAAladvQr6sQ9KOmJSYTgE",
+    "CAACAgIAAxkBAAFBmxtpfwSC0Oo1A-zmqCskNzsWzmUmrQACGQMAAladvQqhVs0CITIOPTgE",
     "CAACAgIAAxkBAAFBmx1pfwSNU0Fx9CtU203tqibzZ3pZCAACFwMAAladvQrnhi7ExlTFGzgE",
     "CAACAgIAAxkBAAFBmx9pfwSZfNeT-c4VkSRRpEY8pWdRmgACBQMAAladvQrrlyw2i1A6hjgE",
     "CAACAgIAAxkBAAFBmyFpfwSlsmKcdZe5j5Yd46FsPpm-NAACYgIAAladvQrfUNgPvAABLqw4BA",
@@ -111,115 +85,38 @@ ALL_VALENTINE_STICKERS = [
     "CAACAgIAAxkBAAFBmyxpfwT6wBHH26I3c4EmhftIo8_bfwACGQADwDZPE9BDgPYgVxRLOAQ",
     "CAACAgIAAxkBAAFBmy5pfwUPJqfYvSreaTPZcmbHZ_vg0wACAgADwDZPEwj1bkX6hKdZOAQ",
     "CAACAgIAAxkBAAFBmzBpfwUfyhd8HP07q_oWwjznhlLhDwACDQEAAladvQpG_UMdBUTXlzgE",
-    "CAACAgIAAxkBAAFBmvppfwLgJhUWM52e3-hkWqsCrN9zPwACegEAAiI3jgR80USR9hGNuDgE"
 ]
 
-STICKER_CAPTIONS = [
-    "Анонимное признание в анимации 💌",
-    "Ты мне нравишься... с анимацией 😏",
-    "С 14 февраля ❤️ (анимация)",
-]
-
-class ConfessionForm(StatesGroup):
+class ConfessionFlow(StatesGroup):
     waiting_for_recipient = State()
-    waiting_for_message = State()
+    waiting_for_content_choice = State()
+    preview_and_confirm = State()
 
 # ────────────────── ХЭНДЛЕРЫ ──────────────────
 
 @router.message(CommandStart())
-async def cmd_start(message: Message):
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Открытка 💌", callback_data="gen_text")],
-        [InlineKeyboardButton(text="Анимированный стикер", callback_data="gen_sticker")],
-        [InlineKeyboardButton(text="Отправить признание", callback_data="start_confess")]
-    ])
-    await message.answer(
-        "Привет! 💌\n\n"
-        "Я бот для <b>анонимных признаний</b> и crush-сообщений.\n\n"
-        "<b>Команды:</b>\n"
-        "• /confess — отправить анонимное признание\n"
-        "• /valentine — сгенерировать валентинку\n"
-        "• /sticker — анимированный стикер\n"
-        "• /cancel — отменить текущее действие\n\n"
-        "Получатель увидит только меня — 100% анонимно."
-    , reply_markup=kb)
-
-
-@router.callback_query(F.data == "gen_text")
-async def callback_gen_text(callback: CallbackQuery):
-    await callback.answer()
-    templates = VALENTINE_TEMPLATES["ru"]["romantic"]
-    selected = random.choice(templates)
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔄 Другую", callback_data="gen_text")],
-        [InlineKeyboardButton(text="💌 Отправить признание", callback_data="start_confess")]
-    ])
-    await callback.message.answer(
-        f"Вот твоя валентинка:\n\n"
-        f"<blockquote expandable>{selected}</blockquote>",
-        reply_markup=kb
-    )
-
-
-@router.callback_query(F.data == "gen_sticker")
-async def callback_gen_sticker(callback: CallbackQuery):
-    await callback.answer()
-    sticker_id = random.choice(ALL_VALENTINE_STICKERS)
-    caption = random.choice(STICKER_CAPTIONS)
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔄 Другой стикер", callback_data="gen_sticker")],
-        [InlineKeyboardButton(text="💌 Отправить признание", callback_data="start_confess")]
-    ])
-    await callback.message.answer_sticker(sticker=sticker_id)
-    await callback.message.answer(f"<i>{caption}</i>", reply_markup=kb)
-
-
-@router.callback_query(F.data == "start_confess")
-async def callback_start_confess(callback: CallbackQuery, state: FSMContext):
-    await callback.answer()
-    now = datetime.now(UTC)
-    last_time = last_confess_time.get(callback.from_user.id)
-    if last_time and (now - last_time) < timedelta(seconds=ANTISPAM_SECONDS):
-        remaining = int((timedelta(seconds=ANTISPAM_SECONDS) - (now - last_time)).total_seconds())
-        await callback.message.answer(f"Подожди ещё {remaining} сек перед следующим признанием 😉")
-        return
-
-    await state.set_state(ConfessionForm.waiting_for_recipient)
-    await callback.message.answer(
-        "Кому отправить признание? 💕\n\n"
-        "• Напиши @username\n"
-        "• Или перешли любое сообщение от этого человека\n\n"
-        "Отменить → /cancel"
-    )
-
-
-@router.message(Command("sticker", "valentinessticker"))
-async def cmd_sticker(message: Message):
-    sticker_id = random.choice(ALL_VALENTINE_STICKERS)
-    caption = random.choice(STICKER_CAPTIONS)
-    await message.answer_sticker(sticker=sticker_id)
-    await message.answer(f"<i>{caption}</i>")
-
-
-@router.message(Command("confess", "признание"))
-async def cmd_confess(message: Message, state: FSMContext):
+async def cmd_start(message: Message, state: FSMContext):
+    # Сброс состояния при /start
+    await state.clear()
+    
     now = datetime.now(UTC)
     last_time = last_confess_time.get(message.from_user.id)
     if last_time and (now - last_time) < timedelta(seconds=ANTISPAM_SECONDS):
         remaining = int((timedelta(seconds=ANTISPAM_SECONDS) - (now - last_time)).total_seconds())
-        await message.answer(f"Подожди ещё {remaining} сек перед следующим признанием 😉")
+        await message.answer(f"⏳ Подожди ещё {remaining} сек перед новым признанием 😉")
         return
 
-    await state.set_state(ConfessionForm.waiting_for_recipient)
+    await state.set_state(ConfessionFlow.waiting_for_recipient)
     await message.answer(
-        "Кому отправить признание? 💕\n\n"
+        "💌 <b>Анонимное признание</b>\n\n"
+        "Кому отправить признание?\n"
         "• Напиши @username\n"
         "• Или перешли любое сообщение от этого человека\n\n"
         "Отменить → /cancel"
     )
 
 
-@router.message(ConfessionForm.waiting_for_recipient)
+@router.message(ConfessionFlow.waiting_for_recipient)
 async def process_recipient(message: Message, state: FSMContext):
     target_id: Optional[int] = None
     target_username: Optional[str] = None
@@ -237,113 +134,163 @@ async def process_recipient(message: Message, state: FSMContext):
             is_bot = getattr(chat, 'is_bot', False) or chat.type == "bot"
         except Exception as e:
             logging.error(f"Не удалось найти чат по @{message.text}: {e}")
-            await message.answer("Не нашёл такого пользователя 😔\nПопробуй переслать его сообщение.")
+            await message.answer("❌ Не нашёл такого пользователя. Попробуй переслать его сообщение.")
             return
     else:
-        await message.answer("Перешли сообщение от человека или укажи @username")
+        await message.answer("🔄 Перешли сообщение от человека или укажи @username")
         return
 
     if target_id == message.from_user.id:
-        await message.answer("Нельзя отправить признание самому себе 😏")
+        await message.answer("🤔 Нельзя отправить признание самому себе 😏")
         return
 
     if is_bot:
-        await message.answer("Нельзя отправлять признания ботам — они не умеют влюбляться 😂\nВыбери реального человека!")
+        await message.answer("🤖 Нельзя отправлять признания ботам — они не умеют влюбляться 😂")
         return
 
     if target_id is None:
-        await message.answer("Не удалось определить получателя. Попробуй ещё раз.")
+        await message.answer("❓ Не удалось определить получателя. Попробуй ещё раз.")
         return
 
-    await state.update_data(
-        target_id=target_id,
-        target_username=target_username,
-        contents=[]
-    )
-
-    await state.set_state(ConfessionForm.waiting_for_message)
-    await message.answer(
-        "Супер! Теперь пришли содержимое признания:\n"
-        "• текст\n"
-        "• фото\n"
-        "• голосовое\n"
-        "• стикер\n\n"
-        "Можно несколько сообщений подряд.\n"
-        "Когда закончишь — нажми кнопку ниже ↓"
-    )
-
-
-@router.message(ConfessionForm.waiting_for_message, F.text | F.photo | F.voice | F.sticker)
-async def collect_content(message: Message, state: FSMContext):
-    data = await state.get_data()
-    contents: List[Dict] = data.get("contents", [])
-
-    item = {}
-    if message.text:
-        item = {"type": "text", "content": message.text}
-    elif message.photo:
-        item = {"type": "photo", "file_id": message.photo[-1].file_id}
-    elif message.voice:
-        item = {"type": "voice", "file_id": message.voice.file_id}
-    elif message.sticker:
-        item = {"type": "sticker", "file_id": message.sticker.file_id}
-
-    contents.append(item)
-    await state.update_data(contents=contents)
-
+    await state.update_data(target_id=target_id, target_username=target_username)
+    await state.set_state(ConfessionFlow.waiting_for_content_choice)
+    
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Отправить 💌", callback_data="send_confession")],
-        [InlineKeyboardButton(text="Отменить", callback_data="cancel")]
+        [InlineKeyboardButton(text="💝 Только стикер", callback_data="content_sticker")],
+        [InlineKeyboardButton(text="💌 Только валентинка", callback_data="content_text")],
+        [InlineKeyboardButton(text="💕 Стикер + валентинка", callback_data="content_both")],
+        [InlineKeyboardButton(text="❌ Отменить", callback_data="cancel")],
     ])
+    await message.answer(
+        "✨ Отлично! Теперь выбери, что отправить:\n\n"
+        "• Стикер — анимированное сердечко ❤️\n"
+        "• Валентинка — романтическое сообщение 💬\n"
+        "• Оба — полный пакет любви! 🌹",
+        reply_markup=kb
+    )
 
-    await message.answer("Добавлено! Ещё что-то или отправляем?", reply_markup=kb)
+
+@router.callback_query(F.data.startswith("content_"))
+async def process_content_choice(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    
+    choice = callback.data.split("_")[1]
+    data = await state.get_data()
+    
+    # Генерируем контент
+    sticker_id = random.choice(VALENTINE_STICKERS) if choice in ["sticker", "both"] else None
+    valentine_text = random.choice(VALENTINE_TEMPLATES["ru"]["romantic"]) if choice in ["text", "both"] else None
+    
+    await state.update_data(sticker_id=sticker_id, valentine_text=valentine_text, content_type=choice)
+    
+    # Формируем превью
+    preview = "🎁 <b>Превью признания:</b>\n\n"
+    if sticker_id:
+        preview += "🖼️ Анимированный стикер ❤️\n"
+    if valentine_text:
+        preview += f"📝 <i>{valentine_text}</i>\n\n"
+    preview += "Получатель увидит только бота — 100% анонимно 🔒"
+    
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Отправить", callback_data="confirm_send")],
+        [InlineKeyboardButton(text="🔄 Другой вариант", callback_data="regenerate")],
+        [InlineKeyboardButton(text="❌ Отменить", callback_data="cancel")],
+    ])
+    
+    # Отправляем превью
+    if sticker_id:
+        await callback.message.answer_sticker(sticker=sticker_id)
+    await callback.message.answer(preview, reply_markup=kb)
+    await state.set_state(ConfessionFlow.preview_and_confirm)
 
 
-@router.callback_query(F.data == "send_confession")
-async def send_confession(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data == "regenerate")
+async def regenerate_content(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     data = await state.get_data()
-    target_id = data.get("target_id")
-    contents: List[Dict] = data.get("contents", [])
+    choice = data.get("content_type", "both")
+    
+    # Генерируем новый контент
+    sticker_id = random.choice(VALENTINE_STICKERS) if choice in ["sticker", "both"] else None
+    valentine_text = random.choice(VALENTINE_TEMPLATES["ru"]["romantic"]) if choice in ["text", "both"] else None
+    
+    await state.update_data(sticker_id=sticker_id, valentine_text=valentine_text)
+    
+    # Обновляем превью
+    preview = "🎁 <b>Новое превью признания:</b>\n\n"
+    if sticker_id:
+        preview += "🖼️ Анимированный стикер ❤️\n"
+    if valentine_text:
+        preview += f"📝 <i>{valentine_text}</i>\n\n"
+    preview += "Получатель увидит только бота — 100% анонимно 🔒"
+    
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Отправить", callback_data="confirm_send")],
+        [InlineKeyboardButton(text="🔄 Ещё вариант", callback_data="regenerate")],
+        [InlineKeyboardButton(text="❌ Отменить", callback_data="cancel")],
+    ])
+    
+    if sticker_id:
+        await callback.message.answer_sticker(sticker=sticker_id)
+    await callback.message.answer(preview, reply_markup=kb)
 
-    if not target_id or not contents:
-        await callback.message.answer("Нет данных для отправки. Начни заново /confess")
+
+@router.callback_query(F.data == "confirm_send")
+async def confirm_send(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    data = await state.get_data()
+    
+    target_id = data.get("target_id")
+    sticker_id = data.get("sticker_id")
+    valentine_text = data.get("valentine_text")
+    
+    if not target_id:
+        await callback.message.answer("❌ Ошибка: получатель не найден. Начни заново /start")
         await state.clear()
         return
-
+    
     try:
-        for item in contents:
-            if item["type"] == "text":
-                await bot.send_message(target_id, f"Тебе анонимное признание 💌\n\n{item['content']}")
-            elif item["type"] == "photo":
-                await bot.send_photo(target_id, photo=item["file_id"], caption="Тебе анонимное признание 💌")
-            elif item["type"] == "voice":
-                await bot.send_voice(target_id, voice=item["file_id"], caption="Тебе анонимное признание 💌")
-            elif item["type"] == "sticker":
-                await bot.send_sticker(target_id, sticker=item["file_id"])
-
-        await callback.message.answer("Признание успешно и анонимно отправлено! 🔥")
+        # Отправляем контент получателю
+        if sticker_id:
+            await bot.send_sticker(
+                target_id,
+                sticker=sticker_id,
+                caption="💌 Тебе анонимное признание" if not valentine_text else None
+            )
+        if valentine_text:
+            await bot.send_message(
+                target_id,
+                f"💌 Тебе анонимное признание\n\n<b>{valentine_text}</b>",
+                parse_mode=ParseMode.HTML
+            )
+        
+        # Подтверждение отправителю
+        await callback.message.answer(
+            "✅ Признание успешно отправлено!\n"
+            "Получатель увидит только бота — твоя анонимность сохранена 🔒\n\n"
+            "Хочешь отправить ещё? → /start"
+        )
+        
         last_confess_time[callback.from_user.id] = datetime.now(UTC)
-
+        await state.clear()
+        
     except Exception as e:
         error_str = str(e).lower()
         logging.error(f"Ошибка доставки: {e}")
-
-        if "can't initiate conversation" in error_str or "forbidden: bot can't" in error_str:
+        
+        if "can't initiate conversation" in error_str or "bot can't initiate" in error_str:
             bot_username = (await bot.get_me()).username
             await callback.message.answer(
-                "Не могу доставить 😢\n\n"
-                "Получатель ещё не общался со мной — Telegram не даёт ботам писать первыми.\n\n"
-                "Попроси его открыть бота и написать /start — "
-                f"как только он это сделает, признание улетит! 💌\n\n"
-                f"Ссылка: https://t.me/{bot_username}"
+                "⚠️ Получатель ещё не писал боту.\n\n"
+                f"Попроси его открыть @{bot_username} и написать /start — "
+                "тогда признание доставится автоматически! 💌"
             )
-        elif "send messages to bots" in error_str:
-            await callback.message.answer("Это бот, а не человек — признания ботам не отправляются 😅")
         else:
-            await callback.message.answer("Что-то пошло не так при доставке… Попробуй позже или /confess заново.")
-
-    await state.clear()
+            await callback.message.answer(
+                "❌ Не удалось доставить признание.\n"
+                "Возможно, получатель заблокировал ботов или удалил аккаунт."
+            )
+        await state.clear()
 
 
 @router.callback_query(F.data == "cancel")
@@ -354,87 +301,20 @@ async def cancel_action(event: Message | CallbackQuery, state: FSMContext):
         msg = event.message
     else:
         msg = event
-
-    if await state.get_state() is None:
-        await msg.answer("Нечего отменять 😊")
-        return
-
+    
     await state.clear()
-    await msg.answer("Действие отменено. /confess — чтобы начать заново 💕")
-
-
-@router.message(Command("valentine", "gen", "валентинка"))
-async def generate_valentine(message: Message):
-    text = message.text.lower().strip()
-    args = text.split()[1:]
-
-    lang = "ru"
-    category = "romantic"
-
-    categories = ["romantic", "funny", "cute", "flirty"]
-
-    for arg in args:
-        if arg in ["en", "english", "англ"]:
-            lang = "en"
-        elif arg in categories:
-            category = arg
-
-    if lang not in VALENTINE_TEMPLATES or category not in VALENTINE_TEMPLATES[lang]:
-        await message.answer(
-            "Доступные категории: romantic, funny, cute, flirty\n"
-            "Язык: ru (по умолчанию) или en\n\n"
-            "Примеры:\n"
-            "/valentine funny\n"
-            "/valentine cute en"
-        )
-        return
-
-    templates = VALENTINE_TEMPLATES[lang][category]
-    selected = random.choice(templates)
-
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔄 Другую", callback_data=f"gen_val_{lang}_{category}")],
-    ])
-
-    await message.answer(
-        f"Вот твоя валентинка ({category}, {lang.upper()}):\n\n"
-        f"<blockquote expandable>{selected}</blockquote>",
-        reply_markup=kb
-    )
-
-
-@router.callback_query(F.data.startswith("gen_val_"))
-async def regenerate_valentine(callback: CallbackQuery):
-    await callback.answer()
-    parts = callback.data.split("_")
-    if len(parts) >= 4:
-        lang = parts[2]
-        category = parts[3]
-        if lang in VALENTINE_TEMPLATES and category in VALENTINE_TEMPLATES[lang]:
-            templates = VALENTINE_TEMPLATES[lang][category]
-            selected = random.choice(templates)
-            kb = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔄 Другую", callback_data=f"gen_val_{lang}_{category}")],
-            ])
-            await callback.message.edit_text(
-                f"Вот твоя валентинка ({category}, {lang.upper()}):\n\n"
-                f"<blockquote expandable>{selected}</blockquote>",
-                reply_markup=kb
-            )
-            return
-    await callback.message.answer("Ошибка генерации. Попробуй /valentine")
+    await msg.answer("🚫 Действие отменено. Начать заново → /start")
 
 
 async def main():
-    # Проверка валидности токена
+    # Проверка токена
     try:
         me = await bot.get_me()
         logging.info(f"✅ Бот запущен: @{me.username} (id={me.id})")
     except Exception as e:
-        logging.critical(f"❌ Неверный BOT_TOKEN! Ошибка: {e}")
-        logging.critical("Проверьте токен в .env или переменных окружения")
+        logging.critical(f"❌ Неверный BOT_TOKEN: {e}")
         return
-
+    
     await dp.start_polling(
         bot,
         allowed_updates=["message", "callback_query"],
