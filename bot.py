@@ -183,24 +183,83 @@ VALENTINE_TEMPLATES = {
     }
 }
 
+# ────────────────── FILE_ID АНИМИРОВАННЫХ СТИКЕРОВ ──────────────────
+VALENTINE_STICKERS = {
+    "cute": [
+        "AAMCAQADGQEAARqOiml-8BkY-A7dEp40DcT05ywrR08rAALJBwAC43gEAAGESQ6JsVOaWwEAB20AAzgE",  # первый старый
+        "AAMCAgADGQEAARqOkGl-8rxoWplnK7rktVHALUxxWKPKAAJwBQACP5XMCu8O5gHvPyV7AQAHbQADOAQ",  # новый 1
+        "AAMCAgADGQEAARqOlGl-8vIHqKa6DPLGL0Lmga3VD61eAAIXAwACVp29CueGLsTGVMUbAQAHbQADOAQ",  # новый 2
+        "AAMCAgADGQEAARqOlml-8wmrULE5165D12HBFazQTl9JAAICAAPANk8TCPVuRfqEp1kBAAdtAAM4BA",  # новый 3
+        "AAMCAgADGQEAARqOmml-8yGZxq-LkQLglFki10SlQ3bPAAL6AAP3AsgPcgN0rrC8YjIBAAdtAAM4BA",  # новый 4
+        "AAMCAgADGQEAARqOnGl-8zV-TsdF79XpZ-DTbwIROdH2AAJ6AQACIjeOBHzRRJH2EY24AQAHbQADOAQ",  # новый 5
+        "AAMCAgADGQEAARqOoGl-80H7pFHzbfv_DSvVfqKmoR0cAAIFAwACVp29CuuXLDaLUDqGAQAHbQADOAQ",  # новый 6
+        "AAMCAgADGQEAARqOpGl-80v__AJba1UOUC1zVcncTAeNAAJsAANZu_wlsMc-Gxss4P0BAAdtAAM4BA",  # новый 7
+        "AAMCAgADGQEAARqOpml-82FmScSlV4_53VR5jHUfclO1AAIMAAPANk8T4s8j_8J3n7wBAAdtAAM4BA",  # новый 8
+        "AAMCAgADGQEAARqOrGl-86nSziYVOh0KJuYUyqm9u22aAAIZAAPANk8T0EOA9iBXFEsBAAdtAAM4BA",  # новый 9
+        "AAMCAgADGQEAARqOsGl-8-kF5KnbETG7_C-bssguwi83AAIKAAPANk8T_w2uPugO_QgBAAdtAAM4BA",  # новый 10
+        "AAMCAgADGQEAARqOtGl-8_ullzjXIX8eaKRxnNA1po7IAAKJAgACVp29CqFWzQIhMg49AQAHbQADOAQ",  # новый 11
+        "AAMCAgADGQEAARqOtml-9AwQPCKHegKW-4COFbV09e6qAAJaEgAC7j_hSzYTwY1_lfrkAQAHbQADOAQ",  # новый 12
+        "AAMCAgADGQEAARqOuGl-9BxhvGQXdlyUlqfgAw0W1Qy5AAIKHQACwaggSQiNN_5i8NF4AQAHbQADOAQ",  # новый 13
+        "AAMCAgADGQEAARqOuml-9FoKUQzKP4MRYuveH9xwVNDPAAKrEQACyvBQSEm753QxB38OAQAHbQADOAQ",  # новый 14
+        "AAMCBAADGQEAARqOvGl-9G260QSes9WEUvNv7H05k_RyAALuEQACpvFxHptzNHbM9taGAQAHbQADOAQ",  # новый 15
+        "AAMCAgADGQEAARqOwGl-9IUp2N9kU2M49okk29uJ9Nj1AAIFLQACjgeRSOK9yHW-aXzWAQAHbQADOAQ",  # новый 16
+        "AAMCAgADGQEAARqOwml-9JWHx6XENXsxMK85sChog2_-AAKUAAM7YCQU39nXtW9mKSwBAAdtAAM4BA",  # новый 17
+    ],
+    "funny": [
+        "AAMCAgADGQEAARqOpml-82FmScSlV4_53VR5jHUfclO1AAIMAAPANk8T4s8j_8J3n7wBAAdtAAM4BA",  # пример, добавь свои
+        "AAMCAgADGQEAARqOuGl-9BxhvGQXdlyUlqfgAw0W1Qy5AAIKHQACwaggSQiNN_5i8NF4AQAHbQADOAQ",  # пример
+        # добавь ещё из твоих
+    ],
+    "romantic": [
+        "AAMCAgADGQEAARqOlGl-8vIHqKa6DPLGL0Lmga3VD61eAAIXAwACVp29CueGLsTGVMUbAQAHbQADOAQ",  # пример
+        "AAMCAgADGQEAARqOpGl-80v__AJba1UOUC1zVcncTAeNAAJsAANZu_wlsMc-Gxss4P0BAAdtAAM4BA",  # пример
+        # добавь ещё
+    ],
+    "neon": [
+        "AAMCAgADGQEAARqOnGl-8zV-TsdF79XpZ-DTbwIROdH2AAJ6AQACIjeOBHzRRJH2EY24AQAHbQADOAQ",  # пример
+        "AAMCAgADGQEAARqOoGl-80H7pFHzbfv_DSvVfqKmoR0cAAIFAwACVp29CuuXLDaLUDqGAQAHbQADOAQ",  # пример
+        # добавь ещё
+    ],
+    "default": [
+        "AAMCAQADGQEAARqOiml-8BkY-A7dEp40DcT05ywrR08rAALJBwAC43gEAAGESQ6JsVOaWwEAB20AAzgE",  # микс
+        # добавь ещё
+    ]
+}
+
+STICKER_CAPTIONS = [
+    "Анонимное признание в анимации 💌",
+    "Ты мне нравишься... с анимацией 😏",
+    "С 14 февраля ❤️ (анимация)",
+    "Roses are red... anonymously animated",
+    "Милый стикер для твоего crush",
+    "Анонимно, но с душой 💕",
+]
+
 class ConfessionForm(StatesGroup):
     waiting_for_recipient = State()
-    waiting_for_message   = State()
+    waiting_for_message = State()
 
 # ────────────────── ХЭНДЛЕРЫ ──────────────────
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton("Открытка 💌", callback_data="gen_pic")],
+        [InlineKeyboardButton("Текстовая валентинка", callback_data="gen_text")],
+        [InlineKeyboardButton("Анимированный стикер", callback_data="gen_sticker")],
+        [InlineKeyboardButton("Отправить признание", callback_data="start_confess")]
+    ])
     await message.answer(
         "Привет! 💌\n\n"
         "Я бот для <b>анонимных признаний</b> и crush-сообщений.\n\n"
         "<b>Команды:</b>\n"
         "• /confess — отправить анонимное признание\n"
         "• /valentine или /gen — сгенерировать валентинку (можно funny, cute, romantic, flirty + en)\n"
-        "• /cancel  — отменить текущее действие\n\n"
+        "• /valentinessticker или /sticker — анимированный стикер\n"
+        "• /cancel — отменить текущее действие\n\n"
         "Просто пришли текст / фото / голосовое / стикер — я спрошу, кому отправить.\n"
         "Получатель увидит только меня — 100% анонимно."
-    )
+    , reply_markup=kb)
 
 
 @router.message(Command("confess", "признание"))
@@ -295,7 +354,7 @@ async def collect_content(message: Message, state: FSMContext):
 
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Отправить 💌", callback_data="send_confession")],
-        [InlineKeyboardButton(text="Отменить",     callback_data="cancel")]
+        [InlineKeyboardButton(text="Отменить", callback_data="cancel")]
     ])
 
     await message.answer("Добавлено! Ещё что-то или отправляем?", reply_markup=kb)
@@ -334,9 +393,9 @@ async def send_confession(callback: CallbackQuery, state: FSMContext):
         if "can't initiate conversation" in error_str or "forbidden: bot can't" in error_str:
             await callback.message.answer(
                 "Не могу доставить 😢\n\n"
-                "Получатель ещё не общался со мной — Telegram не даёт ботам писать первыми незнакомым людям.\n\n"
-                "Попроси его открыть бота и написать /start (или любое сообщение) — "
-                f"как только он это сделает, твоё признание сразу улетит! 💌\n\n"
+                "Получатель ещё не общался со мной — Telegram не даёт ботам писать первыми.\n\n"
+                "Попроси его открыть бота и написать /start — "
+                f"как только он это сделает, признание улетит! 💌\n\n"
                 f"Ссылка: https://t.me/{(await bot.get_me()).username}"
             )
         elif "send messages to bots" in error_str:
@@ -357,7 +416,7 @@ async def cancel_action(event: Message | CallbackQuery, state: FSMContext):
         msg = event
 
     if await state.get_state() is None:
-        await msg.answer("Нечего отменять 😊")
+        await msg.answer("Нечego отменять 😊")
         return
 
     await state.clear()
@@ -367,10 +426,10 @@ async def cancel_action(event: Message | CallbackQuery, state: FSMContext):
 @router.message(Command("valentine", "gen", "валентинка"))
 async def generate_valentine(message: Message):
     text = message.text.lower().strip()
-    args = text.split()[1:]  # всё после команды
+    args = text.split()[1:]
 
     lang = "ru"
-    category = "romantic"  # default
+    category = "romantic"
 
     categories = ["romantic", "funny", "cute", "flirty"]
 
@@ -386,8 +445,7 @@ async def generate_valentine(message: Message):
             "Язык: ru (по умолчанию) или en\n\n"
             "Примеры:\n"
             "/valentine funny\n"
-            "/valentine cute en\n"
-            "/valentine flirty"
+            "/valentine cute en"
         )
         return
 
@@ -397,7 +455,7 @@ async def generate_valentine(message: Message):
     await message.answer(
         f"Вот твоя валентинка ({category}, {lang.upper()}):\n\n"
         f"<blockquote expandable>{selected}</blockquote>\n\n"
-        "Хочешь другую? Просто напиши /valentine [категория] [en]"
+        "Хочешь другую? /valentine [категория] [en]"
     )
 
 
