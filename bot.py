@@ -92,7 +92,7 @@ VALENTINE_TEMPLATES = {
 
 # ────────────────── ВАЛИДНЫЕ СТИКЕРЫ (только проверенные) ──────────────────
 ALL_VALENTINE_STICKERS = [
-"AAMCAgADGQEAAUGa-ml_AuAmFRYznZ7f6GRaqwKs33M_AAJ6AQACIjeOBHzRRJH2EY24AQAHbQADOAQ",
+"CAACAgIAAxkBAAFBmvppfwLgJhUWM52e3-hkWqsCrN9zPwACegEAAiI3jgR80USR9hGNuDgE",
 ]
 
 STICKER_CAPTIONS = [
