@@ -3,7 +3,7 @@ import logging
 import os
 import random
 from datetime import datetime, timedelta, timezone
-from typing import Optional, List, Dict
+from typing import Optional, Dict
 
 from aiogram import Bot, Dispatcher, Router, F
 from aiogram.client.default import DefaultBotProperties
@@ -184,12 +184,12 @@ async def process_content_choice(callback: CallbackQuery, state: FSMContext):
     await state.update_data(sticker_id=sticker_id, valentine_text=valentine_text, content_type=choice)
     
     # Формируем превью
-    preview = "🎁 <b>Превью признания:</b>\n\n"
+    preview_lines = ["🎁 <b>Превью признания:</b>\n"]
     if sticker_id:
-        preview += "🖼️ Анимированный стикер ❤️\n"
+        preview_lines.append("🖼️ Анимированный стикер ❤️")
     if valentine_text:
-        preview += f"📝 <i>{valentine_text}</i>\n\n"
-    preview += "Получатель увидит только бота — 100% анонимно 🔒"
+        preview_lines.append(f"\n📝 <i>{valentine_text}</i>")
+    preview_lines.append("\n\nПолучатель увидит только бота — 100% анонимно 🔒")
     
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="✅ Отправить", callback_data="confirm_send")],
@@ -200,7 +200,7 @@ async def process_content_choice(callback: CallbackQuery, state: FSMContext):
     # Отправляем превью
     if sticker_id:
         await callback.message.answer_sticker(sticker=sticker_id)
-    await callback.message.answer(preview, reply_markup=kb)
+    await callback.message.answer("\n".join(preview_lines), reply_markup=kb)
     await state.set_state(ConfessionFlow.preview_and_confirm)
 
 
@@ -217,12 +217,12 @@ async def regenerate_content(callback: CallbackQuery, state: FSMContext):
     await state.update_data(sticker_id=sticker_id, valentine_text=valentine_text)
     
     # Обновляем превью
-    preview = "🎁 <b>Новое превью признания:</b>\n\n"
+    preview_lines = ["🎁 <b>Новое превью признания:</b>\n"]
     if sticker_id:
-        preview += "🖼️ Анимированный стикер ❤️\n"
+        preview_lines.append("🖼️ Анимированный стикер ❤️")
     if valentine_text:
-        preview += f"📝 <i>{valentine_text}</i>\n\n"
-    preview += "Получатель увидит только бота — 100% анонимно 🔒"
+        preview_lines.append(f"\n📝 <i>{valentine_text}</i>")
+    preview_lines.append("\n\nПолучатель увидит только бота — 100% анонимно 🔒")
     
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="✅ Отправить", callback_data="confirm_send")],
@@ -232,7 +232,7 @@ async def regenerate_content(callback: CallbackQuery, state: FSMContext):
     
     if sticker_id:
         await callback.message.answer_sticker(sticker=sticker_id)
-    await callback.message.answer(preview, reply_markup=kb)
+    await callback.message.answer("\n".join(preview_lines), reply_markup=kb)
 
 
 @router.callback_query(F.data == "confirm_send")
@@ -250,17 +250,23 @@ async def confirm_send(callback: CallbackQuery, state: FSMContext):
         return
     
     try:
-        # Отправляем контент получателю
+        # Отправляем стикер БЕЗ подписи (ограничение Telegram API)
         if sticker_id:
-            await bot.send_sticker(
-                target_id,
-                sticker=sticker_id,
-                caption="💌 Тебе анонимное признание" if not valentine_text else None
-            )
+            await bot.send_sticker(target_id, sticker=sticker_id)
+        
+        # Отправляем текстовое сообщение
         if valentine_text:
+            # Валентинка уже включает заголовок
             await bot.send_message(
                 target_id,
                 f"💌 Тебе анонимное признание\n\n<b>{valentine_text}</b>",
+                parse_mode=ParseMode.HTML
+            )
+        elif sticker_id:
+            # Только стикер — отправляем поясняющее сообщение отдельно
+            await bot.send_message(
+                target_id,
+                "💌 Тебе анонимное признание",
                 parse_mode=ParseMode.HTML
             )
         
