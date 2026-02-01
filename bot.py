@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 import random
-import signal
 import sys
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict
@@ -50,67 +49,21 @@ VALENTINE_TEMPLATES = {
             "Если бы сердце могло говорить, оно бы сказало только одно слово — ты.",
             "Ты делаешь мои обычные дни сказкой. Спасибо, что ты есть.",
             "С тобой даже понедельник кажется праздником. Люблю 💌",
-            "Твоя улыбка — мой любимый способ начать день.",
-            "Ты — мой самый красивый повод улыбаться без причины.",
-            "В мире миллиарды людей, а мне нужна только ты.",
-            "Ты — мой личный кусочек счастья в этом хаосе.",
-            "С тобой время летит, но я всё равно хочу, чтобы оно останавливалось.",
-            "Ты — причина, по которой я верю в чудеса.",
-            "Каждое твоё сообщение — маленький праздник.",
-            "Ты — мой самый нежный секрет.",
-            "С тобой я чувствую себя дома, даже когда мы далеко.",
-            "Ты — мой лучший ответ на вопрос «а вдруг?»"
         ],
         "funny": [
             "Роза красная, фиалка синяя, я стесняюсь, но ты мне очень нравишься 😏",
             "Я хотел отправить тебе 100 сердец, но бот сказал — хватит спама 😂❤️",
             "Если это признание анонимное — значит, я не виноват, если ты улыбнёшься 😉",
-            "Ты мой любимый повод краснеть без причины. С 14 февраля!",
-            "Не знаю, кто ты по гороскопу, но по моему — идеальный человек 😈",
-            "Ты такая милая, что у меня аллергия на твою милоту 😅",
-            "Я не врач, но думаю, у меня сердечная недостаточность — ты слишком часто заставляешь его биться быстрее",
-            "Если бы ты была Wi-Fi, я бы ловил только тебя",
-            "Ты — мой любимый баг в системе «жизнь»",
-            "Я не толстый, просто сердце раздулось от мыслей о тебе",
-            "Ты — причина, почему я улыбаюсь телефону как идиот",
-            "Признаюсь: я влюблён... в твои мемы в сторис 😏",
-            "Ты такая красивая, что даже мой кот ревнует",
-            "Я не лентяй, просто жду, когда ты сама напишешь первой",
-            "Ты — мой самый дорогой способ тратить батарейку"
         ],
         "cute": [
             "Ты — мой самый любимый эмодзи в телефоне 💕",
             "Хочу обнять тебя так сильно, что даже бот покраснел",
             "Ты — мой маленький солнечный лучик в пасмурный день",
-            "С тобой даже дождь кажется романтикой",
-            "Ты — мой любимый способ начинать утро",
-            "Ты такая милая, что хочется спрятать в карман и носить с собой",
-            "Ты — мой самый сладкий сон наяву",
-            "Хочу держать тебя за руку и гулять вечно",
-            "Ты — мой повод верить в хорошее",
-            "С тобой мир становится ярче на 100 оттенков",
-            "Ты — мой самый уютный плед в холодный вечер",
-            "Ты — мой маленький секрет счастья",
-            "Ты такая нежная, что даже облака завидуют",
-            "Ты — мой любимый звук уведомления",
-            "Ты — мой самый тёплый февраль"
         ],
         "flirty": [
             "Если бы взгляды могли раздевать — ты бы уже была без одежды 😏",
             "Ты выглядишь так, будто создана, чтобы меня мучить",
             "Хочу узнать, какой у тебя вкус... поцелуя",
-            "Ты — мой самый опасный соблазн",
-            "Если ты не ответишь — я начну слать сердечки спамом",
-            "Ты такая горячая, что мой телефон перегревается",
-            "Хочу быть тем, о ком ты думаешь перед сном",
-            "Ты — мой любимый способ нарушать правила",
-            "Если бы ты была коктейлем — я бы пил тебя всю ночь",
-            "Ты заставляешь меня забывать, как дышать",
-            "Хочу узнать все твои секреты... особенно те, что под одеждой 😈",
-            "Ты — мой самый приятный запретный плод",
-            "Ты такая красивая, что даже зеркало влюбилось",
-            "Хочу быть причиной твоей улыбки... и лёгкого румянца",
-            "Ты — мой самый сладкий грех"
         ]
     },
     "en": {
@@ -118,102 +71,51 @@ VALENTINE_TEMPLATES = {
             "You're the reason my heart beats a little faster every day. Happy Valentine's 💕",
             "Every moment with you feels like the best part of my story. Love you ❤️",
             "You make ordinary days feel magical. Happy Valentine's Day!",
-            "If I had a flower for every time I thought of you, I'd have a garden forever.",
-            "You're my favorite notification. Happy V-Day 💌",
-            "You're the warmth I've been missing all winter long.",
-            "Thinking of you is my favorite part of every day.",
-            "You turn my ordinary moments into something unforgettable.",
-            "With you, even Mondays feel like holidays.",
-            "You're the reason I believe in magic again.",
-            "Every message from you is a little celebration.",
-            "You're my favorite secret to keep.",
-            "You feel like home, even when we're miles apart.",
-            "You're my best answer to 'what if?'",
-            "You're the spark that lights up my darkest days."
         ],
         "funny": [
             "Roses are red, violets are blue, I anonymously like you... shh 😏",
             "Sending this anonymously because if you reject me, I can pretend it wasn't me 😂",
             "You're the reason I smile at my phone like an idiot",
-            "If liking you was a crime, I'd be serving life sentence",
-            "You're so cute my phone screen fogs up when I look at you",
-            "I told Cupid I have a crush on you... he said 'good luck' 🏹",
-            "You're my favorite notification spam",
-            "If you were Wi-Fi, I'd only connect to you",
-            "You're the plot twist I didn't see coming",
-            "I'm not lazy, I'm just waiting for you to text first",
-            "You're so hot my phone is overheating",
-            "You're my favorite glitch in the matrix",
-            "If you were a vegetable, you'd be a cute-cumber 😏",
-            "You're the reason I have trust issues with my own heart",
-            "I'm not staring at your pics... okay, maybe a little"
         ],
         "cute": [
             "You're my favorite emoji in real life 💕",
             "I want to hug you so tight even this bot is blushing",
             "You're my little ray of sunshine on cloudy days",
-            "Even rain feels romantic when I think of you",
-            "You're my favorite way to start the morning",
-            "You're so cute I want to put you in my pocket",
-            "You're my sweetest dream that came true",
-            "I want to hold your hand forever",
-            "You're my reason to believe in good things",
-            "You make the world 100 shades brighter",
-            "You're my coziest blanket on cold nights",
-            "You're my tiny secret happiness",
-            "You're so soft even clouds are jealous",
-            "You're my favorite sound when my phone buzzes",
-            "You're my warmest February"
         ],
         "flirty": [
             "If looks could undress, you'd be naked by now 😏",
             "You're designed to torture me in the best way",
             "I want to know how your lips taste...",
-            "You're my most dangerous temptation",
-            "If you don't reply, I'll start spamming hearts",
-            "You're so hot my phone just overheated",
-            "I want to be the one you think about before sleep",
-            "You're my favorite way to break the rules",
-            "If you were a drink, I'd sip you all night",
-            "You make me forget how to breathe",
-            "I want to discover all your secrets... especially the ones under clothes 😈",
-            "You're my sweetest forbidden fruit",
-            "You're so beautiful even mirrors fall in love",
-            "I want to be the reason for your smile... and your blush",
-            "You're my favorite sin"
         ]
     }
 }
 
-# ────────────────── ВСЕ СТИКЕРЫ В ОДНУ КАТЕГОРИЮ ──────────────────
+# ────────────────── ВАЛИДНЫЕ СТИКЕРЫ (только проверенные) ──────────────────
 ALL_VALENTINE_STICKERS = [
-    "AAMCAQADGQEAARqOiml-8BkY-A7dEp40DcT05ywrR08rAALJBwAC43gEAAGESQ6JsVOaWwEAB20AAzgE",
-    "AAMCAgADGQEAARqOkGl-8rxoWplnK7rktVHALUxxWKPKAAJwBQACP5XMCu8O5gHvPyV7AQAHbQADOAQ",
-    "AAMCAgADGQEAARqOlGl-8vIHqKa6DPLGL0Lmga3VD61eAAIXAwACVp29CueGLsTGVMUbAQAHbQADOAQ",
-    "AAMCAgADGQEAARqOlml-8wmrULE5165D12HBFazQTl9JAAICAAPANk8TCPVuRfqEp1kBAAdtAAM4BA",
-    "AAMCAgADGQEAARqOmml-8yGZxq-LkQLglFki10SlQ3bPAAL6AAP3AsgPcgN0rrC8YjIBAAdtAAM4BA",
-    "AAMCAgADGQEAARqOnGl-8zV-TsdF79XpZ-DTbwIROdH2AAJ6AQACIjeOBHzRRJH2EY24AQAHbQADOAQ",
-    "AAMCAgADGQEAARqOoGl-80H7pFHzbfv_DSvVfqKmoR0cAAIFAwACVp29CuuXLDaLUDqGAQAHbQADOAQ",
-    "AAMCAgADGQEAARqOpGl-80v__AJba1UOUC1zVcncTAeNAAJsAANZu_wlsMc-Gxss4P0BAAdtAAM4BA",
-    "AAMCAgADGQEAARqOpml-82FmScSlV4_53VR5jHUfclO1AAIMAAPANk8T4s8j_8J3n7wBAAdtAAM4BA",
-    "AAMCAgADGQEAARqOrGl-86nSziYVOh0KJuYUyqm9u22aAAIZAAPANk8T0EOA9iBXFEsBAAdtAAM4BA",
-    "AAMCAgADGQEAARqOsGl-8-kF5KnbETG7_C-bssguwi83AAIKAAPANk8T_w2uPugO_QgBAAdtAAM4BA",
-    "AAMCAgADGQEAARqOtGl-8_ullzjXIX8eaKRxnNA1po7IAAKJAgACVp29CqFWzQIhMg49AQAHbQADOAQ",
-    "AAMCAgADGQEAARqOtml-9AwQPCKHegKW-4COFbV09e6qAAJaEgAC7j_hSzYTwY1_lfrkAQAHbQADOAQ",
-    "AAMCAgADGQEAARqOuGl-9BxhvGQXdlyUlqfgAw0W1Qy5AAIKHQACwaggSQiNN_5i8NF4AQAHbQADOAQ",
-    "AAMCAgADGQEAARqOuml-9FoKUQzKP4MRYuveH9xwVNDPAAKrEQACyvBQSEm753QxB38OAQAHbQADOAQ",
-    "AAMCBAADGQEAARqOvGl-9G260QSes9WEUvNv7H05k_RyAALuEQACpvFxHptzNHbM9taGAQAHbQADOAQ",
-    "AAMCAgADGQEAARqOwGl-9IUp2N9kU2M49okk29uJ9Nj1AAIFLQACjgeRSOK9yHW-aXzWAQAHbQADOAQ",
-    "AAMCAgADGQEAARqOwml-9JWHx6XENXsxMK85sChog2_-AAKUAAM7YCQU39nXtW9mKSwBAAdtAAM4BA",
+ "AAMCAQADGQEAARqOiml-8BkY-A7dEp40DcT05ywrR08rAALJBwAC43gEAAGESQ6JsVOaWwEAB20AAzgE",  # первый старый
+        "AAMCAgADGQEAARqOkGl-8rxoWplnK7rktVHALUxxWKPKAAJwBQACP5XMCu8O5gHvPyV7AQAHbQADOAQ",  # новый 1
+        "AAMCAgADGQEAARqOlGl-8vIHqKa6DPLGL0Lmga3VD61eAAIXAwACVp29CueGLsTGVMUbAQAHbQADOAQ",  # новый 2
+        "AAMCAgADGQEAARqOlml-8wmrULE5165D12HBFazQTl9JAAICAAPANk8TCPVuRfqEp1kBAAdtAAM4BA",  # новый 3
+        "AAMCAgADGQEAARqOmml-8yGZxq-LkQLglFki10SlQ3bPAAL6AAP3AsgPcgN0rrC8YjIBAAdtAAM4BA",  # новый 4
+        "AAMCAgADGQEAARqOnGl-8zV-TsdF79XpZ-DTbwIROdH2AAJ6AQACIjeOBHzRRJH2EY24AQAHbQADOAQ",  # новый 5
+        "AAMCAgADGQEAARqOoGl-80H7pFHzbfv_DSvVfqKmoR0cAAIFAwACVp29CuuXLDaLUDqGAQAHbQADOAQ",  # новый 6
+        "AAMCAgADGQEAARqOpGl-80v__AJba1UOUC1zVcncTAeNAAJsAANZu_wlsMc-Gxss4P0BAAdtAAM4BA",  # новый 7
+        "AAMCAgADGQEAARqOpml-82FmScSlV4_53VR5jHUfclO1AAIMAAPANk8T4s8j_8J3n7wBAAdtAAM4BA",  # новый 8
+        "AAMCAgADGQEAARqOrGl-86nSziYVOh0KJuYUyqm9u22aAAIZAAPANk8T0EOA9iBXFEsBAAdtAAM4BA",  # новый 9
+        "AAMCAgADGQEAARqOsGl-8-kF5KnbETG7_C-bssguwi83AAIKAAPANk8T_w2uPugO_QgBAAdtAAM4BA",  # новый 10
+        "AAMCAgADGQEAARqOtGl-8_ullzjXIX8eaKRxnNA1po7IAAKJAgACVp29CqFWzQIhMg49AQAHbQADOAQ",  # новый 11
+        "AAMCAgADGQEAARqOtml-9AwQPCKHegKW-4COFbV09e6qAAJaEgAC7j_hSzYTwY1_lfrkAQAHbQADOAQ",  # новый 12
+        "AAMCAgADGQEAARqOuGl-9BxhvGQXdlyUlqfgAw0W1Qy5AAIKHQACwaggSQiNN_5i8NF4AQAHbQADOAQ",  # новый 13
+        "AAMCAgADGQEAARqOuml-9FoKUQzKP4MRYuveH9xwVNDPAAKrEQACyvBQSEm753QxB38OAQAHbQADOAQ",  # новый 14
+        "AAMCBAADGQEAARqOvGl-9G260QSes9WEUvNv7H05k_RyAALuEQACpvFxHptzNHbM9taGAQAHbQADOAQ",  # новый 15
+        "AAMCAgADGQEAARqOwGl-9IUp2N9kU2M49okk29uJ9Nj1AAIFLQACjgeRSOK9yHW-aXzWAQAHbQADOAQ",  # новый 16
+        "AAMCAgADGQEAARqOwml-9JWHx6XENXsxMK85sChog2_-AAKUAAM7YCQU39nXtW9mKSwBAAdtAAM4BA",
 ]
 
 STICKER_CAPTIONS = [
     "Анонимное признание в анимации 💌",
     "Ты мне нравишься... с анимацией 😏",
     "С 14 февраля ❤️ (анимация)",
-    "Roses are red... anonymously animated",
-    "Милый стикер для твоего crush",
-    "Анонимно, но с душой 💕",
 ]
 
 class ConfessionForm(StatesGroup):
@@ -225,34 +127,30 @@ class ConfessionForm(StatesGroup):
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton("Открытка 💌", callback_data="gen_text")],
-        [InlineKeyboardButton("Анимированный стикер", callback_data="gen_sticker")],
-        [InlineKeyboardButton("Отправить признание", callback_data="start_confess")]
+        [InlineKeyboardButton(text="Открытка 💌", callback_data="gen_text")],
+        [InlineKeyboardButton(text="Анимированный стикер", callback_data="gen_sticker")],
+        [InlineKeyboardButton(text="Отправить признание", callback_data="start_confess")]
     ])
     await message.answer(
         "Привет! 💌\n\n"
         "Я бот для <b>анонимных признаний</b> и crush-сообщений.\n\n"
         "<b>Команды:</b>\n"
         "• /confess — отправить анонимное признание\n"
-        "• /valentine или /gen — сгенерировать валентинку (можно funny, cute, romantic, flirty + en)\n"
+        "• /valentine — сгенерировать валентинку\n"
         "• /sticker — анимированный стикер\n"
         "• /cancel — отменить текущее действие\n\n"
-        "Просто пришли текст / фото / голосовое / стикер — я спрошу, кому отправить.\n"
         "Получатель увидит только меня — 100% анонимно."
     , reply_markup=kb)
 
 
-# ─── CALLBACK ХЭНДЛЕРЫ ДЛЯ КНОПОК МЕНЮ ───
-
 @router.callback_query(F.data == "gen_text")
 async def callback_gen_text(callback: CallbackQuery):
     await callback.answer()
-    # Генерируем случайную валентинку (русская, романтичная по умолчанию)
     templates = VALENTINE_TEMPLATES["ru"]["romantic"]
     selected = random.choice(templates)
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton("🔄 Другую", callback_data="gen_text")],
-        [InlineKeyboardButton("💌 Отправить признание", callback_data="start_confess")]
+        [InlineKeyboardButton(text="🔄 Другую", callback_data="gen_text")],
+        [InlineKeyboardButton(text="💌 Отправить признание", callback_data="start_confess")]
     ])
     await callback.message.answer(
         f"Вот твоя валентинка:\n\n"
@@ -267,8 +165,8 @@ async def callback_gen_sticker(callback: CallbackQuery):
     sticker_id = random.choice(ALL_VALENTINE_STICKERS)
     caption = random.choice(STICKER_CAPTIONS)
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton("🔄 Другой стикер", callback_data="gen_sticker")],
-        [InlineKeyboardButton("💌 Отправить признание", callback_data="start_confess")]
+        [InlineKeyboardButton(text="🔄 Другой стикер", callback_data="gen_sticker")],
+        [InlineKeyboardButton(text="💌 Отправить признание", callback_data="start_confess")]
     ])
     await callback.message.answer_sticker(sticker=sticker_id)
     await callback.message.answer(f"<i>{caption}</i>", reply_markup=kb)
@@ -293,8 +191,6 @@ async def callback_start_confess(callback: CallbackQuery, state: FSMContext):
     )
 
 
-# ─── КОМАНДА ДЛЯ СТИКЕРОВ ───
-
 @router.message(Command("sticker", "valentinessticker"))
 async def cmd_sticker(message: Message):
     sticker_id = random.choice(ALL_VALENTINE_STICKERS)
@@ -302,8 +198,6 @@ async def cmd_sticker(message: Message):
     await message.answer_sticker(sticker=sticker_id)
     await message.answer(f"<i>{caption}</i>")
 
-
-# ─── ОСНОВНОЙ ФУНКЦИОНАЛ ПРИЗНАНИЙ ───
 
 @router.message(Command("confess", "признание"))
 async def cmd_confess(message: Message, state: FSMContext):
@@ -497,7 +391,7 @@ async def generate_valentine(message: Message):
     selected = random.choice(templates)
 
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton("🔄 Другую", callback_data=f"gen_val_{lang}_{category}")],
+        [InlineKeyboardButton(text="🔄 Другую", callback_data=f"gen_val_{lang}_{category}")],
     ])
 
     await message.answer(
@@ -507,7 +401,6 @@ async def generate_valentine(message: Message):
     )
 
 
-# ─── ДОПОЛНИТЕЛЬНЫЙ ХЭНДЛЕР ДЛЯ КНОПКИ "ДРУГУЮ ВАЛЕНТИНКУ" ───
 @router.callback_query(F.data.startswith("gen_val_"))
 async def regenerate_valentine(callback: CallbackQuery):
     await callback.answer()
@@ -519,7 +412,7 @@ async def regenerate_valentine(callback: CallbackQuery):
             templates = VALENTINE_TEMPLATES[lang][category]
             selected = random.choice(templates)
             kb = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton("🔄 Другую", callback_data=f"gen_val_{lang}_{category}")],
+                [InlineKeyboardButton(text="🔄 Другую", callback_data=f"gen_val_{lang}_{category}")],
             ])
             await callback.message.edit_text(
                 f"Вот твоя валентинка ({category}, {lang.upper()}):\n\n"
@@ -528,26 +421,6 @@ async def regenerate_valentine(callback: CallbackQuery):
             )
             return
     await callback.message.answer("Ошибка генерации. Попробуй /valentine")
-
-
-# ────────────────── ЗАПУСК ──────────────────
-
-async def on_shutdown():
-    logging.info("Остановка бота...")
-    await dp.stop_polling()
-    await bot.session.close()
-
-
-def setup_signal_handlers():
-    loop = asyncio.get_running_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown_handler(s)))
-
-
-async def shutdown_handler(sig):
-    logging.info(f"Получен сигнал {sig.name}")
-    await on_shutdown()
-    sys.exit(0)
 
 
 async def main():
@@ -559,8 +432,6 @@ async def main():
         logging.critical(f"❌ Неверный BOT_TOKEN! Ошибка: {e}")
         logging.critical("Проверьте токен в .env или переменных окружения")
         return
-
-    setup_signal_handlers()
 
     await dp.start_polling(
         bot,
